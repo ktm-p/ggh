@@ -1,0 +1,4 @@
+To-Do:
+- Figure out padding
+- Optimizations so it can actually send messages in a reasonable time
+- Implement attacks (Ngueyn, LLL, etc.)

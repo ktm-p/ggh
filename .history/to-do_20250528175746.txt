@@ -1,0 +1,4 @@
+To-Do:
+- Check why changing unimodular matrix affects encryption/decryption
+- Figure out padding
+- Implement attacks (Ngueyn, LLL, etc.)
