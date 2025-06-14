@@ -1,6 +1,6 @@
 import numpy as np
-import flint as fl
 import random
+from flint import fmpz_mat, fmpz, fmpq, fmpq_mat
 '''
     - encode(message): Takes in a string message and encodes it using UTF-8. Returns a list of integers.
     - decode(message): Takes in a list of integers. Decodes using UTF-8, returning a string.
@@ -11,31 +11,20 @@ import random
 class Utils:
     def encode(message: str) -> list[int]:
         encoded = message.encode("utf8")
-        encoded_np = np.array(list(encoded))
-        print(encoded_np.tolist())
-        return fl.fmpz_mat([encoded_np.tolist()])
+        return np.array(list(encoded))
 
     def decode(message: list[int]) -> str:
-        msg = [int(n) for n in message]
-        message_bytes = bytes(msg)
+        message_bytes = bytes(message)
         return message_bytes.decode("utf8")
 
-    def np_to_fl(array: np.ndarray):
-        return fl.fmpz_mat([[int(item) for item in sublist] for sublist in array.tolist()])
-
-    def babai_round(basis: fl.fmpz_mat, vec: fl.fmpz_mat) -> fl.fmpz_mat:
-        x = vec * basis.inv()
-
-        for i in range(x.nrows()):
-            for j in range(x.ncols()):
-                x[i,j] = round(x[i,j])
-
-        closest_vector = x * basis 
-
+    def babai_round(basis: np.array , vec: np.array) -> np.array:
+        t = np.round(vec @ np.linalg.inv(basis))
+        closest_vector = t @ basis        
+        print("Babai's Round", x)
         return closest_vector
-    
+
     # Randomly generates a unimodular matrix U
-    def generate_unimodular(dimension:int, iters:int=-1) -> fl.fmpz_mat:
+    def generate_unimodular(dimension:int, iters:int=-1) -> np.array:
         identity = np.eye(dimension, dtype=int)
         if iters == -1:
             iters = dimension**2
@@ -62,9 +51,9 @@ class Utils:
 
             identity = identity.astype(int)
 
-        return fl.fmpz_mat([[int(item) for item in sublist] for sublist in identity.tolist()])
+        return identity
     
-    def check_unimodular(matrix:np.ndarray) -> bool:
+    def check_unimodular(matrix:np.array) -> bool:
         determinant = round(np.linalg.det(matrix))
         if not (determinant == 1 or determinant == -1):
             print("Not Unimodular")
@@ -73,7 +62,7 @@ class Utils:
             print("Unimodular")
             return True
     
-    def hadamard_ratio(dimension:int, matrix:np.ndarray) -> float:
+    def hadamard_ratio(dimension:int, matrix:np.array) -> float:
         if matrix is None:
             return -1
         
@@ -83,12 +72,11 @@ class Utils:
         ratio = (determinant / norms)**(1 / dimension)
         return ratio
 
-    def check_basis(dimension:int, matrix:np.ndarray) -> bool:
+    def check_basis(dimension:int, matrix:np.array) -> bool:
         if matrix is None:
             return False
         
         return np.linalg.matrix_rank(matrix) == dimension
 
     def generate_error(dimension:int, sigma: int):
-        err = [random.choice([-sigma, sigma]) for _ in range(dimension)]
-        return fl.fmpz_mat([err])
+        return np.random.choice(np.array([-sigma, sigma]), size=dimension,)

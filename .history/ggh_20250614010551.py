@@ -54,6 +54,7 @@ class GGH:
         encoded = Utils.encode(message)
         # print("Encoded", encoded)
         # print("mB", encoded * self.public_key)
+        print(self.dimension)
         error_vector = Utils.generate_error(self.dimension, self.sigma)
         ciphertext = encoded * self.public_key + error_vector
         # print("Ciphertext", ciphertext)
@@ -64,14 +65,14 @@ class GGH:
         # print("mB", closest_vector)
         message = closest_vector * self.public_key.inv()
         # print("Encoded", message)
-        return Utils.decode(message)
+        return Utils.decode(message.astype(int))
 
     def attacker_decrypt(self, ciphertext:np.array) -> str:
         closest_vector = Utils.babai_round(self.public_key, ciphertext)
-        message = closest_vector * np.linalg.inv(self.public_key)
+        message = np.round(closest_vector @ np.linalg.inv(self.public_key))
         return Utils.decode(message.astype(int))
 
-message = "hello! how are you? i am very good! and you are? hahaha, i am glad! i might be crazy. more testing?! HOLY FUCK THIS WORKS HAUSDHVSAGDASGUIVDH"
+message = "hello! how are you? i am very good! and you are? hahaha, i am glad! i might be crazy."
 dim = len(message)
 print("Dimension:", dim)
 init_start = time.time()

@@ -11,13 +11,10 @@ import random
 class Utils:
     def encode(message: str) -> list[int]:
         encoded = message.encode("utf8")
-        encoded_np = np.array(list(encoded))
-        print(encoded_np.tolist())
-        return fl.fmpz_mat([encoded_np.tolist()])
+        return np.array(list(encoded))
 
     def decode(message: list[int]) -> str:
-        msg = [int(n) for n in message]
-        message_bytes = bytes(msg)
+        message_bytes = bytes(message)
         return message_bytes.decode("utf8")
 
     def np_to_fl(array: np.ndarray):
@@ -90,5 +87,6 @@ class Utils:
         return np.linalg.matrix_rank(matrix) == dimension
 
     def generate_error(dimension:int, sigma: int):
-        err = [random.choice([-sigma, sigma]) for _ in range(dimension)]
-        return fl.fmpz_mat([err])
+        print(sigma)
+        err = np.random.choice(np.ndarray([-sigma, sigma]), size=dimension,)
+        return fl.fmpz_mat([[int(item) for item in sublist] for sublist in err.tolist()])

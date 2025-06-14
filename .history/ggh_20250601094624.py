@@ -1,0 +1,74 @@
+import numpy as np
+import random
+from Utils.utils import Utils
+import time
+
+random.seed(69)
+np.random.seed(69)
+class GGH:
+    def __init__(self, dimension:int=2, sigma:int=3, thresh:int=10):
+        # Pre-determined values for N (the dimension) and sigma (the error size)
+        self.dimension = dimension
+        self.sigma = sigma
+        self.thresh = thresh
+
+        self.private_key = self.generate_private_key()
+        self.unimodular = Utils.generate_unimodular(self.dimension)
+        self.public_key = self.generate_public_key()
+
+    def generate_private_key(self) -> np.array:
+        basis = None
+        # Checks if set of vectors is a basis and has a sufficiently high Hadamard Ratio
+        while (not Utils.check_basis(self.dimension, basis)) or (Utils.hadamard_ratio(self.dimension, basis) < 0.75):
+            # Constructs random vector v with entries in [-thresh, thresh].
+            vecs = []
+            for _ in range(self.dimension):
+                vec = []
+                for _ in range(self.dimension):
+                    vec.append(random.randint(-self.thresh, self.thresh))
+                vecs.append(vec)
+            # Appends vector to basis
+            basis = np.array(vecs)
+
+        return basis
+    
+    def generate_public_key(self) -> np.array:
+        return self.unimodular @ self.private_key
+    
+    def encrypt(self, message:str) -> np.array:
+        encoded = Utils.encode(message)
+        error_vector = Utils.generate_error(self.dimension, self.sigma)
+        ciphertext = encoded @ self.public_key + error_vector
+        return ciphertext
+    
+    def decrypt(self, ciphertext:np.array) -> str:
+        closest_vector = Utils.babai_round(self.private_key, ciphertext)
+        message = np.round(closest_vector @ np.linalg.inv(self.private_key) @ np.linalg.inv(self.unimodular))
+        return Utils.decode(message.astype(int))
+
+    def attacker_decrypt(self, ciphertext:np.array) -> str:
+        closest_vector = Utils.babai_round(self.public_key, ciphertext)
+        message = np.round(closest_vector @ np.linalg.inv(self.public_key))
+        return Utils.decode(message.astype(int))
+
+message = "hello! how are you? :)"
+dim = len(message)
+init_start = time.time()
+inst = GGH(dimension=dim)
+init_end = time.time()
+
+enc_start = time.time()
+encrypted = inst.encrypt(message)
+enc_end = dec_start = time.time()
+decryptyed = inst.decrypt(encrypted)
+dec_end = time.time()
+faulty_decrypted = inst.attacker_decrypt(encrypted)
+
+print("Message:", message)
+print("Encrypt:", encrypted)
+print("Decrypt:", decryptyed)
+print("Attacker Attempt:", faulty_decrypted)
+
+print("Initialization:", init_end - init_start)
+print("Encryption:", enc_end - enc_start)
+print("Decryption:", dec_end - dec_start)

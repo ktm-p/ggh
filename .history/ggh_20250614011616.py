@@ -71,7 +71,7 @@ class GGH:
         message = closest_vector * np.linalg.inv(self.public_key)
         return Utils.decode(message.astype(int))
 
-message = "hello! how are you? i am very good! and you are? hahaha, i am glad! i might be crazy. more testing?! HOLY FUCK THIS WORKS HAUSDHVSAGDASGUIVDH"
+message = "hello! how are you? i am very good! and you are? hahaha, i am glad! i might be crazy. more testing?!"
 dim = len(message)
 print("Dimension:", dim)
 init_start = time.time()

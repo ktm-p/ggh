@@ -16,8 +16,7 @@ class Utils:
         return fl.fmpz_mat([encoded_np.tolist()])
 
     def decode(message: list[int]) -> str:
-        msg = [int(n) for n in message]
-        message_bytes = bytes(msg)
+        message_bytes = bytes(list(message))
         return message_bytes.decode("utf8")
 
     def np_to_fl(array: np.ndarray):
