@@ -19,16 +19,7 @@ class GGH:
         self.unimodular = self.generate_unimodular()
         self.public_key = self.generate_public_key()
 
-    def generate_private_key(self) -> fl.fmpz_mat:
-        k = fl.fmpz(self.thresh * math.ceil(math.sqrt(self.dimension)))
-        identity = Utils.conv_to_fmpz(np.eye(self.dimension))
-        basis = None
-        while not Utils.check_basis(basis):
-            r = fl.fmpz_mat([[random.randint(-self.thresh, self.thresh) for _ in range(self.dimension)] for _ in range(self.dimension)])
-            basis = r + (k * identity)
-
-        return fl.fmpz_mat(basis)
-
+    # Randomly generates a unimodular matrix U
     def generate_unimodular(self, iters:int=2) -> fl.fmpz_mat:
         x = sp.zeros(1, self.dimension)
         identity = sp.eye(self.dimension)
@@ -36,7 +27,7 @@ class GGH:
         weights = [1, 5, 1]
         vals = [-1, 0, 1]
 
-        for _ in range(iters):
+        for iter in range(iters):
             rows = list(range(dim))
             random.shuffle(rows)
             for i in rows:
@@ -52,17 +43,33 @@ class GGH:
                 x[0, i] = 0
         
         return Utils.conv_to_fmpz(identity)
+
+    def generate_private_key(self) -> fl.fmpz_mat:
+        k = fl.fmpz(self.thresh * math.ceil(math.sqrt(self.dimension)))
+        identity = Utils.conv_to_fmpz(np.eye(self.dimension))
+        basis = None
+        while not Utils.check_basis(basis):
+            r = fl.fmpz_mat([[random.randint(-self.thresh, self.thresh) for _ in range(self.dimension)] for _ in range(self.dimension)])
+            basis = r + (k * identity)
+        
+        return fl.fmpz_mat(basis)
     
     def generate_public_key(self) -> np.array:
         return self.unimodular * self.private_key
     
     def encrypt(self, message:str) -> np.array:
+        print("Encrypting.")
         encoded = Utils.encode(message)
-        error_vector = fl.fmpz_mat([[random.choice([-self.sigma, self.sigma]) for _ in range(self.dimension)]])
+        # print("Encoded", encoded)
+        # print("mB", encoded * self.public_key)
+        error_vector = Utils.generate_error(self.dimension, self.sigma)
         ciphertext = encoded * self.public_key + error_vector
+        # print("Ciphertext", ciphertext)
+        print("Encrypted.")
         return ciphertext
     
     def decrypt(self, ciphertext:np.array) -> str:
+        print("Decrypting.")
         closest_vector = Utils.babai_round(self.private_key, ciphertext)
         message = closest_vector * self.public_key.inv()
         return Utils.decode(message)

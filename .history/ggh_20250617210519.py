@@ -19,26 +19,23 @@ class GGH:
         self.unimodular = self.generate_unimodular()
         self.public_key = self.generate_public_key()
 
-    def generate_private_key(self) -> fl.fmpz_mat:
-        k = fl.fmpz(self.thresh * math.ceil(math.sqrt(self.dimension)))
-        identity = Utils.conv_to_fmpz(np.eye(self.dimension))
-        basis = None
-        while not Utils.check_basis(basis):
-            r = fl.fmpz_mat([[random.randint(-self.thresh, self.thresh) for _ in range(self.dimension)] for _ in range(self.dimension)])
-            basis = r + (k * identity)
-
-        return fl.fmpz_mat(basis)
-
+    # Randomly generates a unimodular matrix U
     def generate_unimodular(self, iters:int=2) -> fl.fmpz_mat:
         x = sp.zeros(1, self.dimension)
+        print("zeros")
         identity = sp.eye(self.dimension)
+        print("eye")
 
         weights = [1, 5, 1]
         vals = [-1, 0, 1]
 
-        for _ in range(iters):
+        print("Iters:", iters)
+        print("Beginning mixing.")
+        for iter in range(iters):
+            print("Shuffling")
             rows = list(range(dim))
             random.shuffle(rows)
+            print("Iterating rows")
             for i in rows:
                 x[0, i] = 1
                 for j in range(self.dimension):
@@ -52,20 +49,59 @@ class GGH:
                 x[0, i] = 0
         
         return Utils.conv_to_fmpz(identity)
+
+    def generate_private_key(self) -> fl.fmpz_mat:
+        k = fl.fmpz(self.thresh * math.ceil(math.sqrt(self.dimension) + 1))
+        while True:
+            R = fl.fmpz_mat([[random.randint(-self.thresh, self.thresh) for _ in range(self.dimension)] for _ in range(self.dimension)])
+            I = Utils.conv_to_fmpz(sp.eye(self.dimension))
+            KI = k * I
+            R += KI
+            
+            if R.det() != 0:
+                break
+        
+        return R
     
     def generate_public_key(self) -> np.array:
         return self.unimodular * self.private_key
     
+    def generate_public_key_mixing(self) -> np.array:
+        T = np.eye(dim)
+        x = np.eye(1, dim)
+        choices = np.array([-1, 0, 1])
+        weights = np.array([1, 5, 1])
+
+
+        return
+    
     def encrypt(self, message:str) -> np.array:
+        print("Encrypting.")
         encoded = Utils.encode(message)
-        error_vector = fl.fmpz_mat([[random.choice([-self.sigma, self.sigma]) for _ in range(self.dimension)]])
+        # print("Encoded", encoded)
+        # print("mB", encoded * self.public_key)
+        error_vector = Utils.generate_error(self.dimension, self.sigma)
         ciphertext = encoded * self.public_key + error_vector
+        # print("Ciphertext", ciphertext)
+        print("Encrypted.")
         return ciphertext
     
     def decrypt(self, ciphertext:np.array) -> str:
+        print("Decrypting.")
         closest_vector = Utils.babai_round(self.private_key, ciphertext)
-        message = closest_vector * self.public_key.inv()
+        # print("mB", closest_vector)
+        print("Get message.")
+        inv = self.public_key.inv()
+        print("Got inv.")
+        message = closest_vector * inv
+        # print("Encoded", message)
+        print("Decrypted.")
         return Utils.decode(message)
+
+    def attacker_decrypt(self, ciphertext:np.array) -> str:
+        closest_vector = Utils.babai_round(self.public_key, ciphertext)
+        message = closest_vector * np.linalg.inv(self.public_key)
+        return Utils.decode(message.astype(int))
 
 message = "a"*300
 dim = len(message)

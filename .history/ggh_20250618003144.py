@@ -36,7 +36,7 @@ class GGH:
         weights = [1, 5, 1]
         vals = [-1, 0, 1]
 
-        for _ in range(iters):
+        for iter in range(iters):
             rows = list(range(dim))
             random.shuffle(rows)
             for i in rows:
@@ -58,7 +58,7 @@ class GGH:
     
     def encrypt(self, message:str) -> np.array:
         encoded = Utils.encode(message)
-        error_vector = fl.fmpz_mat([[random.choice([-self.sigma, self.sigma]) for _ in range(self.dimension)]])
+        error_vector = fl.fmpz_mat([random.choice([-self.sigma, self.sigma]) for _ in range(self.dimension)])
         ciphertext = encoded * self.public_key + error_vector
         return ciphertext
     

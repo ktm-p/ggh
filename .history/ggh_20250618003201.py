@@ -36,7 +36,7 @@ class GGH:
         weights = [1, 5, 1]
         vals = [-1, 0, 1]
 
-        for _ in range(iters):
+        for iter in range(iters):
             rows = list(range(dim))
             random.shuffle(rows)
             for i in rows:
